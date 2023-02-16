@@ -2,17 +2,19 @@
 
 # 목차
 
-- [니모닉 지갑이란](#니모닉-지갑이란)
-- [니모닉 생성과 원리](#니모닉-생성과-원리)
-  - [Salting](#salting)
-  - [키 스트레칭(Key Stretching)](#키-스트레칭key-stretching)
-- [golang을 이용한 니모닉 코드 생성하기](#golang을-이용한-니모닉-코드-생성하기)
-  - [go-ethereum-hdwallet 패키지](#go-ethereum-hdwallet-패키지)
-  - [소스 코드](#소스-코드)
-  - [함수 정리](#함수-정리)
-- [Wallet 생성하기](#wallet-생성하기)
-  - [소스 코드](#소스-코드-1)
-  - [함수 정리](#함수-정리-1)
+- [wallet](#wallet)
+- [목차](#목차)
+  - [니모닉 지갑이란](#니모닉-지갑이란)
+  - [니모닉 생성과 원리](#니모닉-생성과-원리)
+    - [Salting](#salting)
+    - [키 스트레칭(Key Stretching)](#키-스트레칭key-stretching)
+  - [golang을 이용한 니모닉 코드 생성하기](#golang을-이용한-니모닉-코드-생성하기)
+    - [go-ethereum-hdwallet 패키지](#go-ethereum-hdwallet-패키지)
+    - [소스 코드](#소스-코드)
+    - [함수 정리](#함수-정리)
+  - [Wallet 생성하기](#wallet-생성하기)
+    - [소스 코드](#소스-코드-1)
+    - [함수 정리](#함수-정리-1)
 
 ## 니모닉 지갑이란
 
@@ -245,3 +247,4 @@ func NewWallet(c *gin.Context) {
      return string(a.checksumHex())
     }
     ```
+
