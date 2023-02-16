@@ -30,3 +30,10 @@
 - 해커는 솔트 값 까지 맞춰야하므로
   - 레인보우 공격을 피할 수 있다.
   - 무차별 대입 공격을 피할 수 있다.
+ <img width="623" alt="image" src="https://user-images.githubusercontent.com/20445415/219228327-e08a8cdf-e9db-49a3-a101-69124bc53335.png">
+ 
+### 키 스트레칭(Key Stretching)
+
+- 솔팅 방식을 여러번 반복하는 것
+    - 예측을 더욱 어렵게 하는 것
+<img width="342" alt="image" src="https://user-images.githubusercontent.com/20445415/219228397-c4ce2ac7-53b3-40b0-bb6d-4d5ade41a9e0.png">
