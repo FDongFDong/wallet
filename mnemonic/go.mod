@@ -1,9 +1,9 @@
-module wallet
+module wallet/mnemonic
 
 go 1.19
 
 require (
-	github.com/ethereum/go-ethereum v1.11.0
+	github.com/ethereum/go-ethereum v1.11.1
 	github.com/gin-gonic/gin v1.8.2
 	github.com/google/uuid v1.3.0
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.1

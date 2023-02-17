@@ -12,11 +12,26 @@
     - [go-ethereum-hdwallet 패키지](#go-ethereum-hdwallet-패키지)
     - [소스 코드](#소스-코드)
     - [함수 정리](#함수-정리)
-    - [Wallet 생성하기](#wallet-생성하기)
+  - [Wallet 생성하기](#wallet-생성하기)
     - [소스 코드](#소스-코드-1)
     - [함수 정리](#함수-정리-1)
-  - [golang으로 wallet 만들기]
-  
+- [Wallet 만들기](#wallet-만들기)
+  - [서명](#서명)
+    - [키 페어 생성하기](#키-페어-생성하기)
+    - [서명하기](#서명하기)
+  - [검증](#검증)
+  - [복구하기](#복구하기)
+    - [복구](#복구)
+  - [코드 설명](#코드-설명)
+    - [변수 \& 상수](#변수--상수)
+    - [함수](#함수)
+      - [Wallet() : 함수 호출 시 사용자가 wallet이 없다면 키페어를 만들어 파일 형태로 저장해준다](#wallet--함수-호출-시-사용자가-wallet이-없다면-키페어를-만들어-파일-형태로-저장해준다)
+      - [hasWalletFile() : 해당하는 파일의 이름을 가진 파일이 존재하는지 알려준다](#haswalletfile--해당하는-파일의-이름을-가진-파일이-존재하는지-알려준다)
+      - [resotoreKey() : 키 파일을 읽어 해당 키를 반한한다](#resotorekey--키-파일을-읽어-해당-키를-반한한다)
+      - [createPrivKey() : Key Pair를 생성해준다](#createprivkey--key-pair를-생성해준다)
+      - [persistKey() : key를 받아 byte 타입의 파일로 저장한다](#persistkey--key를-받아-byte-타입의-파일로-저장한다)
+      - [aFormK() : private key에서 public key를 가져온다](#aformk--private-key에서-public-key를-가져온다)
+      - [encodeBigInts() : public key의, a,b 값을 합쳐 16진수 문자열형태로 반환한다](#encodebigints--public-key의-ab-값을-합쳐-16진수-문자열형태로-반환한다)
 
 ## 니모닉 지갑이란
 
@@ -250,3 +265,312 @@ func NewWallet(c *gin.Context) {
     }
     ```
 
+---
+
+# Wallet 만들기
+
+서명과 검증부터 알고가자
+
+## 서명
+
+1. 메세지를 Hash한다.
+2. 키 페어를 생성한다.
+    1. 공개키(Public Key)
+    2. 비공개키(Private Key)로 이루어져 있다.
+3. 서명을 만들어낸다.
+    1. 1번에서 만든) Hash된 메세지 + 2번에서 만든)Private key = 서명
+
+### 키 페어 생성하기
+
+[ecdsa](https://pkg.go.dev/crypto/ecdsa)
+
+```go
+func GenerateKey(c elliptic.Curve, rand io.Reader) (*PrivateKey, error)
+```
+
+- GenerateKey() :  개인키 & 공개키 쌍을 생성한다.
+  - 첫번째 인자
+    - 어떠한 알고리즘을 사용할 것인지
+      - 실습에서는 표준 라이브러리에 있는 알고리즘 사용
+  - 두번째 인자
+    - 난수
+  - 예제
+  
+    ```go
+    privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+
+    utils.HandleErr(err)
+
+    fmt.Println("Private Key", privateKey.D)
+    fmt.Println("Public Key, X, Y", privateKey.X, privateKey.Y)
+    ```
+
+### 서명하기
+
+- “Hello Golang” 문자열 서명하기
+
+  ```go
+  func Start() {
+
+  message := "Hello Golang"
+
+  // 메세지를 Hash 한다.
+  hashedMessage := utils.Hash(message)
+
+  // 공개키, 비밀키 키페어를 생성한다.
+  privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+  utils.HandleErr(err)
+  hashAsBytes, err := hex.DecodeString(hashedMessage)
+  utils.HandleErr(err)
+
+  // Hash된 메세지에 비공개 키로 서명한다.
+  r, s, err := ecdsa.Sign(rand.Reader, privateKey, hashAsBytes)
+  utils.HandleErr(err)
+  fmt.Printf("R:%d\nS:%d\n", r, s)
+  }
+  ```
+
+  - 서명 시 R, S값으로 두개의 숫자가 나온다.
+
+## 검증
+
+누군가 Hash된 메세지에  있는 서명이 너의 서명인지 증명하라고 한다.
+
+→ 공개키만 주면 된다.
+
+- Hash된 메세지 + 서명 + (서명에서 만든)공개 키 = true/false
+  - true/false값으로 해당 서명이 공개키와 같이 생성된 비공개키로 서명을 한것인지 확인할 수 있다.
+
+- 예제
+  - 앞서 만든 서명코드를 통해 검증을 진행한다.
+
+    ```go
+    message := "Hello Golang"
+    // ------------------------------------
+    // [서명]
+    
+    // 메세지를 Hash 한다.
+    hashedMessage := utils.Hash(message)
+    
+    // 공개키, 비밀키 키페어를 생성한다.
+    privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+    utils.HandleErr(err)
+    hashAsBytes, err := hex.DecodeString(hashedMessage)
+    utils.HandleErr(err)
+    
+    // Hash된 메세지에 비공개 키로 서명한다.
+    r, s, err := ecdsa.Sign(rand.Reader, privateKey, hashAsBytes)
+    utils.HandleErr(err)
+    
+    // -------------------------------------
+    // [검증]
+    ok := ecdsa.Verify(&privateKey.PublicKey, hashAsBytes, r, s)
+    fmt.Println(ok)
+    ```
+
+## 복구하기
+
+```go
+// 공개키, 비밀키 키페어를 생성한다.
+ privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+ // GenerateKey 함수는 실행할 때마다 새로운 키를 발급해준다.
+
+ // Elliptic Curve의 비공개키를 받아서 byte로 변환해주는 함수
+ keyAsBytes, err := x509.MarshalECPrivateKey(privateKey)
+ // 비공개키를 16진수 형태로 출력
+ fmt.Printf("%x\n", keyAsBytes)
+ utils.HandleErr(err)
+
+ hashAsBytes, err := hex.DecodeString(hashedMessage)
+ utils.HandleErr(err)
+
+ // Hash된 메세지에 비공개 키로 서명한다.
+ r, s, err := ecdsa.Sign(rand.Reader, privateKey, hashAsBytes)
+ utils.HandleErr(err)
+
+ signature := append(r.Bytes(), s.Bytes()...)
+ // 16진수로 변경한 signature
+ fmt.Printf("%x\n", signature)
+```
+
+- 상기 코드에서 만든 비밀키, 서명, Hash된 메시지를 따로 저장해둔다.
+
+```go
+const (
+ // "Hello Golang"의 Hash된 값
+ signature     string = "3e695e7fba03bf846dc9f948321133dc26ba43045070a7c63d882d2981879624e1eaaf420dd3411e92b355dc987dd027cb7a2b4b88a6279a6b4fc5f24d0f99ca"
+ hashedMessage string = "8d2caf9f544c5641e94f35c7dc32ebd5d70bd4c92084c5b6644b017df45406f6"
+ privateKey    string = "307702010104204f99a5d356d0721af5bd7fa303ee53bdcc7500db1d17cd1470efe385b513bdf6a00a06082a8648ce3d030107a14403420004653f89e03fdeec0300ced0c7b90c7f72f9dfdbd30c44e6adb345520bebf6cd76d179041a405c71a17fb77e3b41f0ef24c46b23bbae946a5ba6c839629388791d"
+)
+```
+
+- 실제 블록체인에서는 위에서 변환한 값을 아래와 같이 사용한다.
+  - Hash된 메세지
+    - 트랜잭션 ID
+  - Private Key
+    - User가 파일로 가지고 있다.
+  - 서명 후에 나온 R,S(32bytes로 된 두개의 slice)
+    - 트랜잭션의 서명
+
+### 복구
+
+- Hash화된 비공개 키 복구하기
+
+    ```go
+    const (
+     privateKey    string = "307702010104204f99a5d356d0721af5bd7fa303ee53bdcc7500db1d17cd1470efe385b513bdf6a00a06082a8648ce3d030107a14403420004653f89e03fdeec0300ced0c7b90c7f72f9dfdbd30c44e6adb345520bebf6cd76d179041a405c71a17fb77e3b41f0ef24c46b23bbae946a5ba6c839629388791d"
+    )
+    
+    // 1. private Key 인코딩 체크
+    // 해당 함수는 string을 받아 넘겨받은 문자열의 인코딩이 이상하거나 변형되어 있다면 error을 반환한다.
+    // 정상적이라면 []byte 형태로 반환
+    privBytes, err := hex.DecodeString(privateKey)
+    utils.HandleErr(err)
+    
+    // 해당 함수는 private key를 []byte로 받아 private key를 가져온다.
+    private, err := x509.ParseECPrivateKey(privBytes)
+    utils.HandleErr(err)
+    
+    // 우리가 복구되길 원했던 비공개키와 같은 게 맞는지 아직 확인할 수 없다.
+    // 이것으로 서명을 검증할 때 확인할 수 있다.
+    fmt.Println(private)
+    ```
+
+- Hash화된 서명(Signature) 복구하기
+
+    ```go
+    const (
+    signature string = "3e695e7fba03bf846dc9f948321133dc26ba43045070a7c63d882d2981879624e1eaaf420dd3411e92b355dc987dd027cb7a2b4b88a6279a6b4fc5f24d0f99ca"
+    
+    )
+    
+    // 2. []byte로 변환된 signature를 r과 s로 나눈다.
+    rBytes := sigBytes[:len(sigBytes)/2]
+    sBytes := sigBytes[len(sigBytes)/2:]
+    // 3. big.Int형으로 변환해주기 위해 인스턴스 초기화 진행
+    var bigR, bigS = big.Int{}, big.Int{}
+    // 3-1.
+    bigR.SetBytes(rBytes)
+    bigS.SetBytes(sBytes)
+    
+    fmt.Println(bigR, bigS)
+    ```
+
+  - false는 big.Int의 값이 음수(true)인지 양수(false)인지 알려준다.
+
+## 코드 설명
+### 변수 & 상수
+
+```go
+type wallet struct {
+ // 아무와도 공유되지 않는다.
+ privateKey *ecdsa.PrivateKey
+ // 16진수 문자열의 public key가 된다.
+ Address string
+}
+
+// Singleton을 위해 초기화되지 않은 wallet 선언
+var w *wallet
+
+const (
+ fileName string = "fdongfdong.wallet"
+)
+```
+
+### 함수
+
+#### Wallet() : 함수 호출 시 사용자가 wallet이 없다면 키페어를 만들어 파일 형태로 저장해준다
+
+```go
+// Singleton 패턴 사용
+func Wallet() *wallet {
+ if w == nil {
+  w = &wallet{}
+  // 사용자가 이미 지갑을 가지고 있는지 확인한다.
+  if hasWalletFile() {
+   w.privateKey = restoreKey()
+   // 만약 있다면 그 키를 파일로부터 복구한다.
+  } else {
+   // 만약 없다면..
+   // 키페어를 만들어서
+   key := createPrivKey()
+   // 파일에 저장해둔다.
+   persistKey(key)
+   // 생성한 키페어를 등록한다.
+   w.privateKey = key
+  }
+  w.Address = aFromK(w.privateKey)
+ }
+ return w
+}
+```
+
+#### hasWalletFile() : 해당하는 파일의 이름을 가진 파일이 존재하는지 알려준다
+
+```go
+func hasWalletFile() bool {
+ _, err := os.Stat(fileName)
+ return !os.IsNotExist(err)
+}
+```
+
+#### resotoreKey() : 키 파일을 읽어 해당 키를 반한한다
+
+```go
+// named return을 사용하면 variable을 미리 초기화시켜준다.
+// return 시 알아서 리턴시켜준다.
+// 매우 짧은 function에서 사용해야한다.
+func restoreKey() (key *ecdsa.PrivateKey) {
+ keyAsByte, err := os.ReadFile(fileName)
+ utils.HandleErr(err)
+ // x509 : private key를 parse, mershall 할 수 있다.
+ key, err = x509.ParseECPrivateKey(keyAsByte)
+ utils.HandleErr(err)
+ return
+}
+```
+
+#### createPrivKey() : Key Pair를 생성해준다
+
+- Public Key
+- Private Key
+
+```go
+func createPrivKey() *ecdsa.PrivateKey {
+ // 키페어를 생성해준다.
+ privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+ utils.HandleErr(err)
+ return privKey
+}
+```
+
+#### persistKey() : key를 받아 byte 타입의 파일로 저장한다
+
+```go
+func persistKey(key *ecdsa.PrivateKey) {
+ // private key를 받아서 byte slice로 만든다.
+ bytes, err := x509.MarshalECPrivateKey(key)
+ utils.HandleErr(err)
+ // 0644 : 읽기와 쓰기 허용
+ err = os.WriteFile(fileName, bytes, 0644)
+ utils.HandleErr(err)
+}
+```
+
+#### aFormK() : private key에서 public key를 가져온다
+
+```go
+func aFromK(key *ecdsa.PrivateKey) string {
+ return encodeBigInts(key.X.Bytes(), key.Y.Bytes())
+}
+```
+
+#### encodeBigInts() : public key의, a,b 값을 합쳐 16진수 문자열형태로 반환한다
+
+```go
+func encodeBigInts(a, b []byte) string {
+ // public key의 a, b값을 합쳐서 16진수 문자열형태로 반환한다.
+ z := append(a, b...)
+ return fmt.Sprintf("%x", z)
+}
+```

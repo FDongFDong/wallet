@@ -3,7 +3,7 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 
-	"wallet/controller"
+	"wallet/mnemonic/controller"
 )
 
 func GetRouter() *gin.Engine {

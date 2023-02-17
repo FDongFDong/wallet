@@ -1,6 +1,6 @@
 package main
 
-import "wallet/router"
+import "wallet/mnemonic/router"
 
 func main() {
 	router := router.GetRouter()

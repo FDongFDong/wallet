@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"wallet/model"
-	"wallet/utils"
+	"wallet/mnemonic/model"
+	"wallet/mnemonic/utils"
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/crypto"
