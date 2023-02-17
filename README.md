@@ -72,6 +72,7 @@
 <img width="342" alt="image" src="https://user-images.githubusercontent.com/20445415/219228397-c4ce2ac7-53b3-40b0-bb6d-4d5ade41a9e0.png">
 
 ## golang을 이용한 니모닉 코드 생성하기
+> <https://github.com/FDongFDong/wallet/tree/main/mnemonic>
 
 ### go-ethereum-hdwallet 패키지
 
