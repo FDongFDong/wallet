@@ -269,6 +269,8 @@ func NewWallet(c *gin.Context) {
 
 # Wallet 만들기
 
+> <https://github.com/FDongFDong/wallet/tree/main/wallet>
+
 서명과 검증부터 알고가자
 
 ## 서명
