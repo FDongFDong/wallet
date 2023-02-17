@@ -12,9 +12,11 @@
     - [go-ethereum-hdwallet 패키지](#go-ethereum-hdwallet-패키지)
     - [소스 코드](#소스-코드)
     - [함수 정리](#함수-정리)
-  - [Wallet 생성하기](#wallet-생성하기)
+    - [Wallet 생성하기](#wallet-생성하기)
     - [소스 코드](#소스-코드-1)
     - [함수 정리](#함수-정리-1)
+  - [golang으로 wallet 만들기]
+  
 
 ## 니모닉 지갑이란
 
