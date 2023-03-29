@@ -1,6 +1,5 @@
 # 목차
 
-- [목차](#목차)
 - [Bitcoin Wallet](#bitcoin-wallet)
   - [종류](#종류)
     - [Hardware Wallet](#hardware-wallet)
