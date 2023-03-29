@@ -1,45 +1,111 @@
-# wallet
-
 # 목차
 
-- [wallet](#wallet)
 - [목차](#목차)
-  - [니모닉 지갑이란](#니모닉-지갑이란)
-  - [니모닉 생성과 원리](#니모닉-생성과-원리)
-    - [Salting](#salting)
-    - [키 스트레칭(Key Stretching)](#키-스트레칭key-stretching)
-  - [golang을 이용한 니모닉 코드 생성하기](#golang을-이용한-니모닉-코드-생성하기)
-    - [go-ethereum-hdwallet 패키지](#go-ethereum-hdwallet-패키지)
-    - [소스 코드](#소스-코드)
-    - [함수 정리](#함수-정리)
-  - [Wallet 생성하기](#wallet-생성하기)
-    - [소스 코드](#소스-코드-1)
-    - [함수 정리](#함수-정리-1)
+- [Bitcoin Wallet](#bitcoin-wallet)
+  - [종류](#종류)
+    - [Hardware Wallet](#hardware-wallet)
+    - [Cold Wallet, Hot Wallet](#cold-wallet-hot-wallet)
+  - [키를 관리하는 방법](#키를-관리하는-방법)
+    - [Nondeterministic(Random) Wallet](#nondeterministicrandom-wallet)
+    - [Hierarchical Deterministic(Seed) Wallet](#hierarchical-deterministicseed-wallet)
+  - [Mnemonic](#mnemonic)
+- [니모닉 지갑이란](#니모닉-지갑이란)
+- [니모닉 생성과 원리](#니모닉-생성과-원리)
+  - [Salting](#salting)
+  - [키 스트레칭(Key Stretching)](#키-스트레칭key-stretching)
+- [golang을 이용한 니모닉 코드 생성하기](#golang을-이용한-니모닉-코드-생성하기)
+  - [go-ethereum-hdwallet 패키지](#go-ethereum-hdwallet-패키지)
+  - [소스 코드](#소스-코드)
+  - [함수 정리](#함수-정리)
+- [Wallet 생성하기](#wallet-생성하기)
+  - [소스 코드](#소스-코드-1)
+  - [함수 정리](#함수-정리-1)
 - [Wallet 만들기](#wallet-만들기)
   - [서명](#서명)
     - [키 페어 생성하기](#키-페어-생성하기)
-    - [서명하기](#서명하기)
+  - [서명하기](#서명하기)
   - [검증](#검증)
   - [복구하기](#복구하기)
-    - [복구](#복구)
-  - [코드 설명](#코드-설명)
-    - [변수 \& 상수](#변수--상수)
-    - [함수](#함수)
-      - [Wallet() : 함수 호출 시 사용자가 wallet이 없다면 키페어를 만들어 파일 형태로 저장해준다](#wallet--함수-호출-시-사용자가-wallet이-없다면-키페어를-만들어-파일-형태로-저장해준다)
-      - [hasWalletFile() : 해당하는 파일의 이름을 가진 파일이 존재하는지 알려준다](#haswalletfile--해당하는-파일의-이름을-가진-파일이-존재하는지-알려준다)
-      - [resotoreKey() : 키 파일을 읽어 해당 키를 반한한다](#resotorekey--키-파일을-읽어-해당-키를-반한한다)
-      - [createPrivKey() : Key Pair를 생성해준다](#createprivkey--key-pair를-생성해준다)
-      - [persistKey() : key를 받아 byte 타입의 파일로 저장한다](#persistkey--key를-받아-byte-타입의-파일로-저장한다)
-      - [aFormK() : private key에서 public key를 가져온다](#aformk--private-key에서-public-key를-가져온다)
-      - [encodeBigInts() : public key의, a,b 값을 합쳐 16진수 문자열형태로 반환한다](#encodebigints--public-key의-ab-값을-합쳐-16진수-문자열형태로-반환한다)
+  - [복구](#복구)
+- [코드 설명](#코드-설명)
+  - [변수 \& 상수](#변수--상수)
+  - [함수](#함수)
+    - [Wallet() : 함수 호출 시 사용자가 wallet이 없다면 키페어를 만들어 파일 형태로 저장해준다](#wallet--함수-호출-시-사용자가-wallet이-없다면-키페어를-만들어-파일-형태로-저장해준다)
+    - [hasWalletFile() : 해당하는 파일의 이름을 가진 파일이 존재하는지 알려준다](#haswalletfile--해당하는-파일의-이름을-가진-파일이-존재하는지-알려준다)
+    - [resotoreKey() : 키 파일을 읽어 해당 키를 반한한다](#resotorekey--키-파일을-읽어-해당-키를-반한한다)
+    - [createPrivKey() : Key Pair를 생성해준다](#createprivkey--key-pair를-생성해준다)
+    - [persistKey() : key를 받아 byte 타입의 파일로 저장한다](#persistkey--key를-받아-byte-타입의-파일로-저장한다)
+    - [aFormK() : private key에서 public key를 가져온다](#aformk--private-key에서-public-key를-가져온다)
+    - [encodeBigInts() : public key의, a,b 값을 합쳐 16진수 문자열형태로 반환한다](#encodebigints--public-key의-ab-값을-합쳐-16진수-문자열형태로-반환한다)
 
-## 니모닉 지갑이란
+
+# Bitcoin Wallet
+
+사용자의 개인키를 안전하게 관리하고 쉽게 거래를 생성하는 것을 지원한다.
+
+- 실제로 네트워크에 참여하지는 않는다.
+- 기능
+  - 거래 조회
+  - 사용자 잔액 조회
+  - 신규 블록 생성 알림
+  - 주소록 관리
+  - 사용자 키 관
+
+## 종류
+
+- Web Wallet
+- App Wallet
+- Paper Wallet
+- Hardware Wallet
+
+### Hardware Wallet
+
+- 개인키를 Export 할 수 있는 기존 Wallet과는 달리 Hardware Wallet은 Private Key를 Export 하거나 조회할 수 없게 생성되었다.
+- 하나의 Hardware Wallet는 **다수의 Address를 생성하고 관리** 할 수 있게 관리된다.
+- 지문, PIN 번호 등 **자체 보안기능**을 제공한다.
+- 고장 시 복구할 수 있는 방법인 **Mnemonic 기능**을 제공한다.
+
+### Cold Wallet, Hot Wallet
+
+- 개인키를 관리하는 지갑이 인터넷과 연결된 환경인지 아닌지에 따라 구분된다.
+- 거래소는 해킹의 위험으로 인해 Cold와 Hot으로 나눠서 관리한다.
+- Hot Wallet
+  - Web Wallet
+  - App Wallet
+  - Desktop Wallet
+- Code Wallet
+  - Hardware Wallet
+  - Paper Wallet
+  - Offline Computer Wallet
+
+## 키를 관리하는 방법
+
+### Nondeterministic(Random) Wallet
+
+- 100개의 Random 개인키를 생성하고, 이를 한번씩만 사용하는 지갑
+- 주소를 한번만 사용하여 Privacy 보장이 높아짐
+- Private key 관리를 위해 주기적인 Backup이 필
+
+### Hierarchical Deterministic(Seed) Wallet
+
+- 하나의 Seed값에서 생성된 Master Key를 중심으로 계층적으로 개인키를 생성
+- 개인키(Master) 하나로 여러 개의 주소를 관리 가능
+- 여러 Branch 키를 생성하여, Branch 마다 용도에 맞는 주소 그룹 분류 가능
+
+## Mnemonic
+
+BIP-39에서 제안된 새로운 Seed 관리 방안
+
+- 기존에는 Random Seed를 통해 개인키 생성을 하고 개인키 분실 시 복구가 불가능하였다.
+  - Mnemonic을 통해 개인키를 분실해도 Mnemonic을 통해 개인키 재 생성이 가능하다.
+
+# 니모닉 지갑이란
 
 니모닉(Mnemonic)이란 결정적 지갑에서 난수 12개의 영단어로 인코딩한 영단어 그룹으로, BIP-39에서 제안되었습니다.
 
 암호화폐 지갑은 `비대칭키 암호 방식`을 사용합니다. 이때 공개키와 개인키(=비밀키)가 사용이 되는데, 이 개인키를 사람이 쓰기 편하게 만들어진 것이 바로, **니모닉(mnemonic)**입니다.
 
-## 니모닉 생성과 원리
+# 니모닉 생성과 원리
 
 1. 128bit or 256bit 길이의 난수를 생성
 2. 난수를 SHA-256알고리즘으로 해싱
@@ -57,7 +123,7 @@
 3. PBKDF2는 출력으로 512비트 값의 seed이다
     - 512비트 값을 만드는 HMAC-SHA512 알고리즘으로
 
-### Salting
+## Salting
 
 - 솔팅(Salting)은 원본 데이터에 임의의 문자열인 솔트(Salt)를 추가하여 해싱하는 방식입니다.
 - 해커는 솔트 값 까지 맞춰야하므로
@@ -65,16 +131,16 @@
   - 무차별 대입 공격을 피할 수 있다.
  <img width="623" alt="image" src="https://user-images.githubusercontent.com/20445415/219228327-e08a8cdf-e9db-49a3-a101-69124bc53335.png">
  
-### 키 스트레칭(Key Stretching)
+## 키 스트레칭(Key Stretching)
 
 - 솔팅 방식을 여러번 반복하는 것
     - 예측을 더욱 어렵게 하는 것
 <img width="342" alt="image" src="https://user-images.githubusercontent.com/20445415/219228397-c4ce2ac7-53b3-40b0-bb6d-4d5ade41a9e0.png">
 
-## golang을 이용한 니모닉 코드 생성하기
+# golang을 이용한 니모닉 코드 생성하기
 > <https://github.com/FDongFDong/wallet/tree/main/mnemonic>
 
-### go-ethereum-hdwallet 패키지
+## go-ethereum-hdwallet 패키지
 
 Go-ethereum 계정을 구현하는 패키지이다.
 
@@ -84,7 +150,7 @@ Go-ethereum 계정을 구현하는 패키지이다.
 go get github.com/miguelmota/go-ethereum-hdwallet
 ```
 
-### 소스 코드
+## 소스 코드
 
 ```go
 // TODO : mnemonic 패키지의 함수를 사용하여 랜덤한 니모닉 코드를 얻습니다.
@@ -104,7 +170,7 @@ func NewMnemonic(c *gin.Context) {
 }
 ```
 
-### 함수 정리
+## 함수 정리
 
 - **NewEntropy()** : **임의로 생성된 엔트로피를 반환합니다.**
 
@@ -122,9 +188,9 @@ func NewMnemonic(c *gin.Context) {
     }
     ```
 
-## Wallet 생성하기
+# Wallet 생성하기
 
-### 소스 코드
+## 소스 코드
 
 ```go
 // TODO : 니모닉 코드를 이용해 private key, address를 생성합니다.
@@ -175,7 +241,7 @@ func NewWallet(c *gin.Context) {
 }
 ```
 
-### 함수 정리
+## 함수 정리
 
 - **NewSeedFromMnemonic() :** **BIP-39 니모닉을 기반으로 BIP-39 시드를 반환합니다.**
 
@@ -308,7 +374,7 @@ func GenerateKey(c elliptic.Curve, rand io.Reader) (*PrivateKey, error)
     fmt.Println("Public Key, X, Y", privateKey.X, privateKey.Y)
     ```
 
-### 서명하기
+## 서명하기
 
 - “Hello Golang” 문자열 서명하기
 
@@ -415,7 +481,7 @@ const (
   - 서명 후에 나온 R,S(32bytes로 된 두개의 slice)
     - 트랜잭션의 서명
 
-### 복구
+## 복구
 
 - Hash화된 비공개 키 복구하기
 
@@ -461,8 +527,8 @@ const (
 
   - false는 big.Int의 값이 음수(true)인지 양수(false)인지 알려준다.
 
-## 코드 설명
-### 변수 & 상수
+# 코드 설명
+## 변수 & 상수
 
 ```go
 type wallet struct {
@@ -480,9 +546,9 @@ const (
 )
 ```
 
-### 함수
+## 함수
 
-#### Wallet() : 함수 호출 시 사용자가 wallet이 없다면 키페어를 만들어 파일 형태로 저장해준다
+### Wallet() : 함수 호출 시 사용자가 wallet이 없다면 키페어를 만들어 파일 형태로 저장해준다
 
 ```go
 // Singleton 패턴 사용
@@ -508,7 +574,7 @@ func Wallet() *wallet {
 }
 ```
 
-#### hasWalletFile() : 해당하는 파일의 이름을 가진 파일이 존재하는지 알려준다
+### hasWalletFile() : 해당하는 파일의 이름을 가진 파일이 존재하는지 알려준다
 
 ```go
 func hasWalletFile() bool {
@@ -517,7 +583,7 @@ func hasWalletFile() bool {
 }
 ```
 
-#### resotoreKey() : 키 파일을 읽어 해당 키를 반한한다
+### resotoreKey() : 키 파일을 읽어 해당 키를 반한한다
 
 ```go
 // named return을 사용하면 variable을 미리 초기화시켜준다.
@@ -533,7 +599,7 @@ func restoreKey() (key *ecdsa.PrivateKey) {
 }
 ```
 
-#### createPrivKey() : Key Pair를 생성해준다
+### createPrivKey() : Key Pair를 생성해준다
 
 - Public Key
 - Private Key
@@ -547,7 +613,7 @@ func createPrivKey() *ecdsa.PrivateKey {
 }
 ```
 
-#### persistKey() : key를 받아 byte 타입의 파일로 저장한다
+### persistKey() : key를 받아 byte 타입의 파일로 저장한다
 
 ```go
 func persistKey(key *ecdsa.PrivateKey) {
@@ -560,7 +626,7 @@ func persistKey(key *ecdsa.PrivateKey) {
 }
 ```
 
-#### aFormK() : private key에서 public key를 가져온다
+### aFormK() : private key에서 public key를 가져온다
 
 ```go
 func aFromK(key *ecdsa.PrivateKey) string {
@@ -568,7 +634,7 @@ func aFromK(key *ecdsa.PrivateKey) string {
 }
 ```
 
-#### encodeBigInts() : public key의, a,b 값을 합쳐 16진수 문자열형태로 반환한다
+### encodeBigInts() : public key의, a,b 값을 합쳐 16진수 문자열형태로 반환한다
 
 ```go
 func encodeBigInts(a, b []byte) string {
